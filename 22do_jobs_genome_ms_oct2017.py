@@ -2,6 +2,7 @@
 #
 # for cGIPS - cluster Genome Interaction Python Santalucia
 # by tc387 starting Mar 4 for Rosalind's project on genome DNAcc interactions
+# this script is used for massive job submission for calculation of SANTA LUCIA free energies.
 
 import numpy as np
 import math

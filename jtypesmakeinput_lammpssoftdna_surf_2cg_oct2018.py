@@ -23,15 +23,14 @@ def main():
     stranddensity = float(sys.argv[6])
     nstrandtypes = int(sys.argv[8])
     lencutgenseg = int(sys.argv[7])
-    ngenomes = int(sys.argv[9])
-    Temperature = round(float(sys.argv[10]))  # Temperature
+    Temperature = round(float(sys.argv[9]))  # Temperature
 
     # PARAMETERS
     lbox = 50000
  #   Nfree_col = 200  # 200 # number of colloids
     Nfree_polymers = 2
     blobs_per_freepolymer = 100000  # if load_dGdata, limit the number of blobs to this number, else limit by the dGdata.
-    rb = 10.  # blob radius ; good for 400bp blobs --
+    rb = 10 # * (lblob/400)**0.588  # blob radius ; good for 400bp blobs --
  #   rc = 200.  # colloid radius
  #   colmass = 100.0
     nstrands = lbox*lbox * stranddensity
@@ -307,11 +306,10 @@ def main():
 
     # write to the coefficients PARM.FILE
     with open("coefficients.dat", "w") as cparmfile :
-        for igen in range(ngenomes):
-            for ipoly in range(Nfree_polymers):
-                for iblob in range(blobs_per_freepolymer) :
-                    sline = str(np.around(cbH_matrix[iblob,ipoly],decimals=2))
-                    cparmfile.write(sline + "\n")
+        for ipoly in range(Nfree_polymers):
+            for iblob in range(blobs_per_freepolymer) :
+                sline = str(np.around(cbH_matrix[iblob,ipoly],decimals=2))
+                cparmfile.write(sline + "\n")
     with open("dGdata.dat", "w") as dgparmfile :
         for ipoly in range(Nfree_polymers):
             for iblob in range(blobs_per_freepolymer) :
@@ -328,8 +326,7 @@ def main():
 
 
     # make lammps input file:
-    rcommand = r"python3 get_input_2cg_ngen.py " + str(blobs_per_freepolymer) + " " + str(lencutgenseg) + " " \
-               + str(lboxxy) + " " + str(lboxz)  + " " + str(ngenomes) + " coefficients.dat > data.genome"
+    rcommand = r"python3 get_input_2cg.py " + str(blobs_per_freepolymer) + " " + str(lencutgenseg) + " " + str(lboxxy) + " " + str(lboxz)  + " coefficients.dat > data.genome"
     print("making lammps input with command: " + rcommand)
     subprocess.run([rcommand],shell=True)
 
