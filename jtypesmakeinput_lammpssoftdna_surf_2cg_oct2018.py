@@ -1,4 +1,6 @@
 # /usr/bin/env python
+# The script for collecting the SantaLucia free energy data and setting up LAMMPS molecular dynamics simulation.
+
 
 import numpy as np
 import math
