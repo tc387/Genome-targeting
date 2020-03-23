@@ -1,5 +1,6 @@
-from collections import deque
+from collections import deque, Counter
 from functools import reduce
+from itertools import chain
 from itertools import product
 from operator import add
 
@@ -56,10 +57,24 @@ def frame_iteration(sequence, length):
     tail = sequence[length:]
     total = len(sequence) - length + 1
     d = total // 100
-    yield head
+    yield string_to_ints(head)
     for i, element in enumerate(tail):
         head.popleft()
         head.append(element)
-        yield head
+        yield string_to_ints(head)
         if VERBOSE and i % d == 0:
             print(f'{i}, {i // d:.2f}% complete')
+
+
+def transcribe(genome, length):
+    gen = frame_iteration(genome, length)
+    genrc = frame_iteration(reverse_complement(genome), length)
+    all_subs = np.array(list(chain(gen, genrc)), dtype=np.int32)
+    all_subs.flags.writeable = False
+    return all_subs
+
+
+def most_common(genome, length, n):
+    seqs = Counter(zip(*genome.transcribe(length))).most_common(n)
+    return np.array([a for a, _ in seqs], dtype=np.int32).T
+    # return Counter(map(tuple, genome.transcribe(length))).most_common(n)
