@@ -1,6 +1,7 @@
 from collections import deque, Counter
 from functools import reduce
-from itertools import chain, product
+from itertools import chain
+from itertools import product
 from operator import add
 
 import numpy as np
