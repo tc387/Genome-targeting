@@ -6,7 +6,7 @@ from itertools import product
 import numpy as np
 from genometargeting._compute import compute_full, compute_only
 
-from genometargeting import ints_to_string, reverse_complement
+from .utils import ints_to_string, reverse_complement
 
 
 class Computer:

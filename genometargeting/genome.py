@@ -1,7 +1,7 @@
 import numpy as np
 from joblib import Memory
 
-from genometargeting import transcribe, most_common
+from .utils import transcribe, most_common
 
 location = './cachedir'
 memory = Memory(location, verbose=0)
@@ -19,6 +19,21 @@ class Genome:
             name = gen_file.split('/')[-1].split('.')[0]
         return Genome(genome_str, name)
 
+    @classmethod
+    def read_genbank(cls, genbank_file, name=None):
+        with open(genbank_file, 'r') as f:
+            line = ""
+            genome_str = ""
+            while line.strip().upper() != "ORIGIN":
+                line = f.readline()
+            line = f.readline()
+            while line.strip() != "//":
+                genome_str += "".join(line.strip().split()[1:]).upper()
+                line = f.readline()
+        if name is None:
+            name = genbank_file.split('/')[-1].split('.')[0]
+        return Genome(genome_str, name)
+
     def __len__(self):
         return len(self.string)
 
@@ -30,6 +45,9 @@ class Genome:
 
     def __str__(self):
         return f'{self.name}'
+
+    def __eq__(self, other):
+        return self.string == other.string
 
     def __format__(self, format_spec):
         return format(self.name, format_spec)
