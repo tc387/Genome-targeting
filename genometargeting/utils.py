@@ -76,4 +76,3 @@ def transcribe(genome, length):
 def most_common(genome, length, n):
     seqs = Counter(zip(*genome.transcribe(length))).most_common(n)
     return np.array([a for a, _ in seqs], dtype=np.int32).T
-    # return Counter(map(tuple, genome.transcribe(length))).most_common(n)

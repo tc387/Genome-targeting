@@ -55,16 +55,24 @@ class Computer:
         return [compute_only(length, *gs, *top, self.table, threads) for gs in transcribed]
 
     def compute(self, computers, file=None):
+        seen = set()
         with open(file, 'w') if file is not None else sys.stdout as fh:
             fh.write(self.compute_fmt_header.format('probe', *self.genomes))
             for results in zip(*computers):
                 pu, pl, _ = results[0]
                 probe = ints_to_string(pu, pl, self.length)
+                if probe in seen:
+                    continue
+                seen.add(probe)
                 scores = *(np.log(r[2]) for r in results),
                 fh.write(self.compute_fmt.format(probe, *scores))
-                fh.write(self.compute_fmt.format(reverse_complement(probe), *scores))
+                revp = reverse_complement(probe)
+                if revp == probe:
+                    continue
+                fh.write(self.compute_fmt.format(revp, *scores))
 
     def compare(self, computers, file):
+        seen = set()
         genomes = *combinations(self.genomes, 2),
         with open(file, 'w') if file is not None else sys.stdout as fh:
             fh.write(self.compare_fmt_header.format('probe', *tuple(n[0] for n in genomes)))
@@ -72,7 +80,13 @@ class Computer:
             for results in zip(*computers):
                 pu, pl, _ = results[0]
                 probe = ints_to_string(pu, pl, self.length)
+                if probe in seen:
+                    continue
+                seen.add(probe)
                 scores = *(np.log(r[2]) for r in results),
                 scores = *((s0 - s1) for (s0, s1) in combinations(scores, 2)),
                 fh.write(self.compare_fmt.format(probe, *scores))
-                fh.write(self.compare_fmt.format(reverse_complement(probe), *scores))
+                revp = reverse_complement(probe)
+                if revp == probe:
+                    continue
+                fh.write(self.compare_fmt.format(revp, *scores))

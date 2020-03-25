@@ -101,26 +101,6 @@ def compute_full(int length, int [::1,] gu , int [::1,] gl, long [::1,] scores, 
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def compute_within(int length, int [::1,] gu , int [::1,] gl, long [::1,] scores, int omp_threads=1):
-    cdef Py_ssize_t subseq = gu.size
-    cdef Py_ssize_t ssi, ss, pu, pl
-    cdef long score
-    cdef int bmax = 2**length-1
-    pu = pl = 0
-    score = 0
-
-    for ssi in range(subseq):
-        pu = gu[ssi]
-        pl = gl[ssi]
-        if lessThanRevComp(pu, pl, length):
-            score = 0
-            for ss in prange(subseq, nogil=True, num_threads=omp_threads, schedule="static"):
-                score += scores[(bmax - (pu ^ gu [ss])) & (bmax - (pl ^ gl[ss]))]
-            yield pu, pl, score
-
-
-@cython.boundscheck(False)
-@cython.wraparound(False)
 def compute_only(int length, int [::1,] gu, int [::1,] gl, int [::1,] ppu, int [::1,] ppl, long [::1,] scores, int omp_threads=1):
     cdef Py_ssize_t subseq = gu.size
     cdef Py_ssize_t psubseq = ppu.size

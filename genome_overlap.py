@@ -8,7 +8,8 @@ def get_parser():
     parser.add_argument('-n', type=int, default=None, help='consider the n most common subsequences in the genomes')
     parser.add_argument('--compare', action='store_true', help='compare the scores of all pairs of genomes')
     parser.add_argument('--file', default=None, help='output file')
-    parser.add_argument('genomes', nargs="+", help='one or more one-line files containing genomes')
+    parser.add_argument('genomes', nargs="+", help=('one or more one-line files containing genomes (.gen)'
+                                                    ' or genbank records (.gb)'))
     return parser
 
 
@@ -26,7 +27,7 @@ def main():
     file = args.file
     score_function = power_four_score
 
-    genomes = *map(Genome.read_gen, gen_files),
+    genomes = *map(Genome.read, gen_files),
     compute = Computer(genomes, length, score_function)
     compute(threads, n, compare, file)
 

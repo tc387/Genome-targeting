@@ -13,6 +13,17 @@ class Genome:
         self.name = name
 
     @classmethod
+    def read(cls, gen_file, filetype=None):
+        readers = {'gen': cls.read_gen,
+                   'gb': cls.read_genbank}
+        if filetype is None:
+            filetype = gen_file.strip().split('.')[-1]
+        try:
+            return readers[filetype](gen_file)
+        except IndexError:
+            raise ValueError("only genbank records (.gb) and single-line files (.gen) are supported")
+
+    @classmethod
     def read_gen(cls, gen_file, name=None):
         genome_str = open(gen_file, 'r').readline().strip().upper()
         if name is None:
