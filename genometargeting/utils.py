@@ -7,7 +7,7 @@ import numpy as np
 
 BASE_MAP = {'A': (1, 0), 'T': (0, 1), 'C': (0, 0), 'G': (1, 1)}
 REV_BASE_MAP = {(1, 0): 'A', (0, 1): 'T', (0, 0): 'C', (1, 1): 'G'}
-RC_MAP = dict(zip("ATCG", "TAGC"))
+RC_MAP = dict(zip("ATCG\n", "TAGC\n"))
 VERBOSE = False
 
 
@@ -60,15 +60,21 @@ def frame_iteration(sequence, length):
     for i, element in enumerate(tail):
         head.popleft()
         head.append(element)
+        if '\n' in head:
+            continue
         yield string_to_ints(head)
         if VERBOSE and i % d == 0:
             print(f'{i}, {i // d:.2f}% complete')
 
 
-def transcribe(genome, length):
+def transcribe(genome, length, do_reverse_complement=True):
     gen = frame_iteration(genome, length)
-    genrc = frame_iteration(reverse_complement(genome), length)
-    all_subs = np.array(list(chain(gen, genrc)), dtype=np.int32)
+    if do_reverse_complement:
+        rgen = reverse_complement(genome)
+        genrc = frame_iteration(rgen, length)
+        all_subs = np.array(list(chain(gen, genrc)), dtype=np.int32)
+    else:
+        all_subs = np.array(list(gen), dtype=np.int32)
     all_subs.flags.writeable = False
     return all_subs
 

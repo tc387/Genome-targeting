@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 from joblib import Memory
 
@@ -33,20 +35,32 @@ class Genome:
     @classmethod
     def read_genbank(cls, genbank_file, name=None):
         with open(genbank_file, 'r') as f:
-            line = ""
+            errors = 0
+            line = "\n"
             genome_str = ""
-            while line.strip().upper() != "ORIGIN":
+            while f.readline():
+                while line.strip().upper() != "ORIGIN":
+                    line = f.readline()
                 line = f.readline()
-            line = f.readline()
-            while line.strip() != "//":
-                genome_str += "".join(line.strip().split()[1:]).upper()
-                line = f.readline()
+                while line.strip() != "//":
+                    if set('rymkswhbvdn').intersection(line.lower()):
+                        errors += 1
+                    genome_str += "".join(line.strip().split()[1:]).upper()
+                    line = f.readline()
+                f.readline()
+                genome_str += '\n'
+        if errors:
+            warnings.warn(f"found {errors} lines with uncertain bases", RuntimeWarning, stacklevel=2)
+        genome_str = genome_str.strip()
         if name is None:
             name = genbank_file.split('/')[-1].split('.')[0]
         return Genome(genome_str, name)
 
     def __len__(self):
-        return len(self.string)
+        return len(self.string.replace('\n', ''))
+
+    def shape(self):
+        return tuple(map(len, self.string.split('\n')))
 
     def __hash__(self):
         return hash(self.string)
@@ -63,9 +77,9 @@ class Genome:
     def __format__(self, format_spec):
         return format(self.name, format_spec)
 
-    def transcribe(self, length):
+    def transcribe(self, length, do_reverse_complement=True):
         _transcribe = memory.cache(transcribe)
-        gu, gl = _transcribe(self, length).T
+        gu, gl = _transcribe(self, length, do_reverse_complement).T
         return np.copy(gu), np.copy(gl)
 
     def most_common(self, length, n):
