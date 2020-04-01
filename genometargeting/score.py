@@ -1,6 +1,6 @@
 from operator import mul
 
-FAC = [sum([4 ** (m - j + 1) * j for j in range(1, m + 1)]) for m in range(1, 30)]
+from numpy import exp
 
 
 def get_counts(bits):
@@ -23,11 +23,31 @@ def get_counts(bits):
     return scores
 
 
-def power_four_score(bits):
-    """
-    given a list of bits representing the logical conjunction of
-    two objects of equal length, return the overlap score defined in
-    <doi to paper>
-    """
-    counts = get_counts(bits)
-    return sum(map(mul, counts.values(), FAC))
+def power_four_score_factory(max_length):
+    factor = [sum([4 ** (m - j + 1) * j for j in range(1, m + 1)]) for m in range(1, max_length + 1)]
+
+    def power_four_score(bits):
+        """
+        given a list of bits representing the logical conjunction of
+        two objects of equal length, return the overlap score defined in
+        <doi to paper>
+        """
+        counts = get_counts(bits)
+        return sum(map(mul, counts.values(), factor))
+
+    return power_four_score
+
+
+def exponential_score_factory(rate, max_length):
+    factor = [sum([exp(rate * (m - j + 1)) * j for j in range(1, m + 1)]) for m in range(1, max_length + 1)]
+
+    def exponential_score(bits):
+        """
+        given a list of bits representing the logical conjunction of
+        two objects of equal length, return the overlap score defined in
+        <doi to paper>
+        """
+        counts = get_counts(bits)
+        return sum(map(mul, counts.values(), factor))
+
+    return exponential_score
