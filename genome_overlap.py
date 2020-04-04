@@ -10,8 +10,10 @@ def get_parser():
     parser.add_argument('-r', '--rate', type=float, default=1, help='rate parameter in the exponential weight')
     parser.add_argument('--compare', action='store_true', help='compare the scores of all pairs of genomes')
     parser.add_argument('--file', default=None, help='output file')
-    parser.add_argument('genomes', nargs="+", help=('one or more genbank records (.gb)'
-                                                    ' or one-line files containing genomes (.gen)'))
+    parser.add_argument('-c', '--do-reverse-complement', action='store_true',
+                        help='include the reverse complement of the genome in the score calculation')
+    parser.add_argument('genomes', nargs="+",
+                        help='one or more genbank records (.gb) or one-line files containing genomes (.gen)')
     return parser
 
 
@@ -29,9 +31,10 @@ def main():
     compare_flag = args.compare
     file = args.file
     score_function = exponential_score_factory(rate, length)
+    do_rc = args.do_reverse_complement
 
     genomes = *map(Genome.read, gen_files),
-    compute = Computer(genomes, length, score_function)
+    compute = Computer(genomes, length, score_function, do_reverse_complement=do_rc)
     compute(threads, n, compare_flag, file)
 
 

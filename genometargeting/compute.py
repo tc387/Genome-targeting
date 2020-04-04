@@ -10,7 +10,7 @@ from .utils import ints_to_string, reverse_complement
 
 
 class Computer:
-    def __init__(self, genomes, length, score_function):
+    def __init__(self, genomes, length, score_function, do_reverse_complement=False):
         if not isinstance(genomes, abc.Iterable):
             genomes = [genomes]
         self.genomes = genomes
@@ -21,6 +21,7 @@ class Computer:
         self.compute_fmt = f'{{:{str(length)}}}' + ngen * ' {:20.10f}' + '\n'
         self.compare_fmt_header = f'{{:{str(length)}}}' + (ngen * (ngen - 1) // 2) * ' {:>20}' + '\n'
         self.compare_fmt = f'{{:{str(length)}}}' + (ngen * (ngen - 1) // 2) * ' {:20.10f}' + '\n'
+        self.reverse_complement = do_reverse_complement
 
     @staticmethod
     def make_table(length, score_function):
@@ -45,17 +46,18 @@ class Computer:
 
     def get_computers_full(self, threads):
         length = self.length
-        transcribed = [g.transcribe(length) for g in self.genomes]
-        return [compute_full(length, *gs, self.table, threads) for gs in transcribed]
+        transcribed = [g.transcribe(length, self.reverse_complement) for g in self.genomes]
+        return [compute_full(length, *gs, self.table, self.reverse_complement, threads) for gs in transcribed]
 
     def get_computers_top(self, threads, n):
         length = self.length
-        transcribed = [g.transcribe(length) for g in self.genomes]
+        transcribed = [g.transcribe(length, self.reverse_complement) for g in self.genomes]
         top = *map(np.copy, np.hstack([g.most_common(length, n) for g in self.genomes])),
-        return [compute_only(length, *gs, *top, self.table, threads) for gs in transcribed]
+        return [compute_only(length, *gs, *top, self.table, self.reverse_complement, threads) for gs in transcribed]
 
     def compute(self, computers, file=None):
         seen = set()
+        fmt = self.compute_fmt
         with open(file, 'w') if file is not None else sys.stdout as fh:
             fh.write(self.compute_fmt_header.format('probe', *self.genomes))
             for results in zip(*computers):
@@ -65,14 +67,14 @@ class Computer:
                     continue
                 seen.add(probe)
                 scores = *(np.log(r[2]) for r in results),
-                fh.write(self.compute_fmt.format(probe, *scores))
                 revp = reverse_complement(probe)
-                if revp == probe:
-                    continue
-                fh.write(self.compute_fmt.format(revp, *scores))
+                fh.write(fmt.format(revp, *scores))
+                if self.reverse_complement and revp != probe:
+                    fh.write(fmt.format(probe, *scores))
 
     def compare(self, computers, file):
         seen = set()
+        fmt = self.compare_fmt
         genomes = *combinations(self.genomes, 2),
         with open(file, 'w') if file is not None else sys.stdout as fh:
             fh.write(self.compare_fmt_header.format('probe', *tuple(n[0] for n in genomes)))
@@ -85,8 +87,7 @@ class Computer:
                 seen.add(probe)
                 scores = *(np.log(r[2]) for r in results),
                 scores = *((s0 - s1) for (s0, s1) in combinations(scores, 2)),
-                fh.write(self.compare_fmt.format(probe, *scores))
                 revp = reverse_complement(probe)
-                if revp == probe:
-                    continue
-                fh.write(self.compare_fmt.format(revp, *scores))
+                fh.write(fmt.format(revp, *scores))
+                if self.reverse_complement and revp != probe:
+                    fh.write(fmt.format(probe, *scores))

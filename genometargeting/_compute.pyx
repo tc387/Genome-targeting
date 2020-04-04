@@ -82,7 +82,7 @@ cdef bint lessThanRevComp(int pu, int pl, int length) nogil:
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def compute_full(int length, int [::1,] gu , int [::1,] gl, long [::1,] scores, int omp_threads=1):
+def compute_full(int length, int [::1,] gu , int [::1,] gl, long [::1,] scores, int rc, int omp_threads=1):
     cdef Py_ssize_t subseq = gu.size
     cdef Py_ssize_t ss, pu, pl
     cdef long score
@@ -92,7 +92,7 @@ def compute_full(int length, int [::1,] gu , int [::1,] gl, long [::1,] scores, 
 
     for pu in range(bmax+1):
         for pl in range(bmax+1):
-            if lessThanRevComp(pu, pl, length):
+            if not rc or lessThanRevComp(pu, pl, length):
                 score = 0
                 for ss in prange(subseq, nogil=True, num_threads=omp_threads, schedule="static"):
                     score += scores[(bmax - (pu ^ gu [ss])) & (bmax - (pl ^ gl[ss]))]
@@ -101,7 +101,7 @@ def compute_full(int length, int [::1,] gu , int [::1,] gl, long [::1,] scores, 
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def compute_only(int length, int [::1,] gu, int [::1,] gl, int [::1,] ppu, int [::1,] ppl, long [::1,] scores, int omp_threads=1):
+def compute_only(int length, int [::1,] gu, int [::1,] gl, int [::1,] ppu, int [::1,] ppl, long [::1,] scores, int rc, int omp_threads=1):
     cdef Py_ssize_t subseq = gu.size
     cdef Py_ssize_t psubseq = ppu.size
     cdef Py_ssize_t ssi, ss, pu, pl
@@ -113,7 +113,7 @@ def compute_only(int length, int [::1,] gu, int [::1,] gl, int [::1,] ppu, int [
     for ssi in range(psubseq):
         pu = ppu[ssi]
         pl = ppl[ssi]
-        if lessThanRevComp(pu, pl, length):
+        if not rc or lessThanRevComp(pu, pl, length):
             score = 0
             for ss in prange(subseq, nogil=True, num_threads=omp_threads, schedule="static"):
                 score += scores[(bmax - (pu ^ gu[ss])) & (bmax - (pl ^ gl[ss]))]
